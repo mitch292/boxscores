@@ -1,9 +1,5 @@
-import { Table, bold, rgb24 } from "../deps.ts";
-import {
-  MlbInning,
-  MlbLineScore,
-  MlbSchedule,
-} from "./model.ts";
+import { bold, rgb24, Table, Cell } from "../deps.ts";
+import { MlbInning, MlbLineScore, MlbSchedule, MlbGameStatus, MlbDateTime } from "./model.ts";
 
 const BASE_URL = "https://statsapi.mlb.com/api/";
 
@@ -22,57 +18,89 @@ export const getBoxScoresFromMlb = async (): Promise<Table[]> => {
       const response = await fetch(
         `${BASE_URL}/v1.1/game/${game.gamePk}/feed/live`,
       );
-      const data = await response.json();
-      const table = createBoxscore(data.liveData.linescore, data.gameData.teams.away.abbreviation, data.gameData.teams.home.abbreviation);
+      const { gamePk, liveData: { linescore }, gameData: { teams, datetime, status } } =
+        await response.json();
+      const table = createBoxscore(
+        linescore,
+        gamePk,
+        datetime,
+        status,
+        teams.away.abbreviation,
+        teams.home.abbreviation,
+      );
       boxScores.push(table);
     }));
   }));
   return boxScores;
 };
 
-const createBoxscore = (lineScore: MlbLineScore, awayTeam: string, homeTeam: string): Table => {
-  const innings: string[] = [];
-  const home: string[] = [];
-  const away: string[] = [];
+const createBoxscore = (
+  lineScore: MlbLineScore,
+  gamePk: number,
+  gameTime: MlbDateTime,
+  status: MlbGameStatus,
+  awayTeam: string,
+  homeTeam: string,
+): Table => {
+  const innings: string[] = Array(9).map((val: any, i: number) =>
+    String(i + 1)
+  );
+  const home: string[] = Array(9).fill(formatNumAsTableString(undefined));
+  const away: string[] = Array(9).fill(formatNumAsTableString(undefined));
 
-  lineScore.innings.forEach((inning: MlbInning) => {
-    console.log(inning.home.runs);
-    innings.push(String(inning.num));
-    home.push(formatNumAsTableString(inning.home.runs));
-    away.push(formatNumAsTableString(inning.away.runs));
+  lineScore.innings.forEach((inning: MlbInning, i: number) => {
+    // Add any extra innings
+    if (!innings[i]) {
+      innings[i] = String(inning.num);
+    }
+    home[i] = formatNumAsTableString(inning.home.runs);
+    away[i] = formatNumAsTableString(inning.away.runs);
   });
 
-  // lets make sure that the array is at least 9 innings long
-  innings.fill("", lineScore.innings.length, 9);
-  home.fill("", lineScore.innings.length, 9);
-  away.fill("", lineScore.innings.length, 9);
+  const header = 
+    [
+      `ID: ${gamePk}`,
+      ...innings,
+      rgb24(bold("R"), { r: 149, g: 226, b: 249 }),
+      "H",
+      "E",
+    ];
 
-  const table = new Table()
-    .border(true)
-    .minColWidth(2)
-    .header(["inning", ...innings, bold("R"), "H", "E"])
-    .body([
+
+  const table = Table
+    .from([
+      [Cell.from(`${gameTime.time}${gameTime.ampm} -- ${status.detailedState}`).colSpan(header.length)],
+      [ ...header ],
       [
         awayTeam,
         ...away,
-        bold(formatNumAsTableString(lineScore.teams.away.runs)),
-        lineScore.teams.away.hits,
-        lineScore.teams.away.errors,
+        rgb24(bold(String(lineScore.teams.away.runs)), {
+          r: 149,
+          g: 226,
+          b: 249,
+        }),
+        lineScore.teams.away.hits || "0",
+        lineScore.teams.away.errors || "0",
       ],
       [
         homeTeam,
         ...home,
-        bold(formatNumAsTableString(lineScore.teams.home.runs)),
-        lineScore.teams.home.hits,
-        lineScore.teams.home.errors,
+        rgb24(bold(String(lineScore.teams.home.runs)), {
+          r: 149,
+          g: 226,
+          b: 249,
+        }),
+        lineScore.teams.home.hits || "0",
+        lineScore.teams.home.errors || "0",
       ],
-    ]);
+    ])
+    .border(true)
+    .minColWidth(2);
 
   return table;
 };
 
-
-const formatNumAsTableString = (val: number|undefined): string => {
+const formatNumAsTableString = (val: number | undefined): string => {
   if (val === undefined) {
     return "";
   }
@@ -86,4 +114,4 @@ const formatNumAsTableString = (val: number|undefined): string => {
   }
 
   return String(val);
-}
+};

@@ -110,3 +110,20 @@ export type MLbInningScore = {
   errors: number;
   leftOnBase: number;
 };
+
+export type MlbDateTime = {
+  dateTime: string; // TODO: type as datetime
+  originalDate: string; // TODO: type as date
+  dayNight: string;
+  time: string;
+  ampm: string;
+} 
+
+export type MlbGameStatus = {
+  abstractGameState: string; // TODO: figure out enums
+  codedGameState: string; // TODO: figure out enums
+  detailedState: string; // TODO: figure out enums
+  statusCode: string; // TODO: figure out enums
+  startTimeTBD: boolean;
+  abstractGameCode: string; // TODO: figure out enums
+};
