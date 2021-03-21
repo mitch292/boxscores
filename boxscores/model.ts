@@ -117,7 +117,7 @@ export type MlbDateTime = {
   dayNight: string;
   time: string;
   ampm: string;
-} 
+};
 
 export type MlbGameStatus = {
   abstractGameState: string; // TODO: figure out enums

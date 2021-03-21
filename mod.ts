@@ -6,6 +6,7 @@ import { Table } from "./deps.ts";
 //  - Add color coding to teams in the boxcore output
 //  - Add player hits etc to boxcore
 //  - Add ability t get scores for just one game
+//  - cliffy has bug with emojis & borders, report or submit pr
 
 if (import.meta.main) {
   const results: Table[] = await getBoxScoresFromMlb();
