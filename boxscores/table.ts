@@ -50,7 +50,7 @@ export const createBoxscore = (
       [
         awayTeam,
         ...away,
-        rgb24(bold(String(lineScore.teams.away.runs)), {
+        rgb24(bold(String(lineScore.teams.away.runs || 0)), {
           r: 149,
           g: 226,
           b: 249,
@@ -61,7 +61,7 @@ export const createBoxscore = (
       [
         homeTeam,
         ...home,
-        rgb24(bold(String(lineScore.teams.home.runs)), {
+        rgb24(bold(String(lineScore.teams.home.runs || 0)), {
           r: 149,
           g: 226,
           b: 249,

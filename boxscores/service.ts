@@ -16,24 +16,34 @@ export const getBoxScoresFromMlb = async (): Promise<Table[]> => {
 
   await Promise.all(schedule.dates.map(async (date) => {
     await Promise.all(date.games.map(async (game) => {
-      const response = await fetch(
-        `${BASE_URL}/v1.1/game/${game.gamePk}/feed/live`,
-      );
-      const {
-        gamePk,
-        liveData: { linescore },
-        gameData: { teams, datetime, status },
-      } = await response.json();
-      const table = createBoxscore(
-        linescore,
-        gamePk,
-        datetime,
-        status,
-        teams.away.abbreviation,
-        teams.home.abbreviation,
-      );
+      const table = await getBoxScoreFromMlb(game.gamePk);
       boxScores.push(table);
     }));
   }));
   return boxScores;
+};
+
+export const getBoxScoreFromMlb = async (gameId: number): Promise<Table> => {
+  const response = await fetch(
+    `${BASE_URL}/v1.1/game/${gameId}/feed/live`,
+  );
+
+  if (response.status !== 200) {
+    throw new Error(`There was an error fetching game data for ${gameId} from MLB: ${response.statusText}`);
+  }
+
+  const {
+    gamePk,
+    liveData: { linescore },
+    gameData: { teams, datetime, status },
+  } = await response.json();
+
+  return createBoxscore(
+    linescore,
+    gamePk,
+    datetime,
+    status,
+    teams.away.abbreviation,
+    teams.home.abbreviation,
+  );
 };
