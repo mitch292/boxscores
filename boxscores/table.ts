@@ -4,7 +4,9 @@ import {
   MlbGameStatus,
   MlbInning,
   MlbLineScore,
-} from "./model.ts";
+  MlbPlayerGameSummary,
+} from "./types.ts";
+import { convertToPlayerSummary } from "./util.ts";
 
 export const createBoxscore = (
   lineScore: MlbLineScore,
@@ -46,7 +48,7 @@ export const createBoxscore = (
         Cell.from(`${gameTime.time}${gameTime.ampm} -- ${status.detailedState}`)
           .colSpan(header.length),
       ],
-      [...header],
+      header,
       [
         awayTeam,
         ...away,
@@ -90,4 +92,43 @@ export const formatNumAsTableString = (val: number | undefined): string => {
   }
 
   return String(val);
+};
+
+export const getPlayerBoxScoreTable = (
+  teamName: string,
+  battingOrder: string[],
+  playerSummaries: any,
+): Table => {
+  const formattedPlayers: MlbPlayerGameSummary[] = [];
+
+  battingOrder.forEach((playerId) =>
+    formattedPlayers.push(
+      convertToPlayerSummary(playerSummaries[`ID${playerId}`]),
+    )
+  );
+
+  const header = ["batters", "AB", "R", "H", "RBI", "BB", "SO", "AVG", "OPS"]
+    .map((val) => rgb24(val, { r: 130, g: 133, b: 134 }));
+
+  const rows = formattedPlayers.map(
+    (p) => [
+      `${p.name}, ${p.position}`,
+      p.atBats,
+      p.runs,
+      p.hits,
+      p.rbi,
+      p.bob,
+      p.strikeOuts,
+      p.seasonAvg,
+      p.seasonAvg,
+    ],
+  );
+
+  const table = Table.from([
+    [Cell.from(teamName).colSpan(header.length)],
+    header,
+    ...rows,
+  ]).border(true).minColWidth(1);
+
+  return table;
 };

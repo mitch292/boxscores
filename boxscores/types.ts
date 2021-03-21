@@ -1,3 +1,5 @@
+import { Table } from "../deps.ts";
+
 export type MlbSchedule = {
   copyright: string;
   totalItems: number;
@@ -126,4 +128,25 @@ export type MlbGameStatus = {
   statusCode: string; // TODO: figure out enums
   startTimeTBD: boolean;
   abstractGameCode: string; // TODO: figure out enums
+};
+
+export type MlbPlayerGameSummary = {
+  name: string;
+  position: string;
+  atBats: number;
+  runs: number;
+  hits: number;
+  rbi: number;
+  bob: number;
+  strikeOuts: number;
+  seasonAvg: string;
+  seasonOps: string;
+};
+
+export type Boxscore = {
+  gameSummary: Table;
+  teamSummary: {
+    away: Table;
+    home: Table;
+  };
 };
